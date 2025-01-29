@@ -17,7 +17,7 @@ model Gadget {
   id  String @id @default(uuid())
   name String
   status GadgetStatus @default(Available)
-  code String?
+  code Int @default(-1)
 
   createdAt DateTime @default(now())
   decommissionedAt DateTime?

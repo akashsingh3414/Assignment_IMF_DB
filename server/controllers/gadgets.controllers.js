@@ -88,14 +88,14 @@ export const updateGadget = async (req, res) => {
     if (status) updateData.status = status;
 
     try {
-        await db.gadget.update({
+        const updatedGadget = await db.gadget.update({
             where: { 
                 id: id
              },
             data: updateData
         });
 
-        return res.status(200).json({ message: "Gadget Updated" });
+        return res.status(200).json({ message: "Gadget Updated", gadget: updatedGadget });
     } catch (error) {
         return res.status(500).json({ message: "Error while updating gadget", error: error.message });
     }
@@ -109,7 +109,7 @@ export const deleteGadget = async (req, res) => {
     }
 
     try {
-        await db.gadget.update({
+        const deletedGadget = await db.gadget.update({
             where: {
                 id: id
             },
@@ -118,7 +118,7 @@ export const deleteGadget = async (req, res) => {
                 status: "Decommissioned"
             }
         })
-        return res.status(200).json({message: "Gadget deleted successfully"})
+        return res.status(200).json({message: "Gadget deleted successfully", gadget: deletedGadget})
     } catch (error) {
         return res.status(500).json({ message: "Error while deleting gadget", error: error.message });
     }
@@ -135,7 +135,6 @@ export const selfDestructGadget = async (req, res) => {
     const generatedCode = Math.floor(1000 + Math.random() * 9000);
 
     try {
-
         const checkStatus = await db.gadget.findUnique({
             where: {
                 id: id
@@ -149,11 +148,24 @@ export const selfDestructGadget = async (req, res) => {
             });
         }
 
-        if (!confirmationCode) {
+        if (checkStatus.code === -1 || !confirmationCode) {
+            await db.gadget.update({
+                where: {
+                    id: id
+                }, 
+                data: {
+                    code: generatedCode
+                }
+            })
+
             return res.status(200).json({ 
                 message: "Confirm self-destruction with this code", 
-                confirmation_code: generatedCode 
+                confirmationCode: generatedCode 
             });
+        }
+
+        if(confirmationCode && confirmationCode !== checkStatus.code) {
+            return res.status(400).json({ message: "Confirmation code did not match" });
         }
 
         const gadget = await db.gadget.update({

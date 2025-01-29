@@ -44,7 +44,7 @@ export const loginUser = async (req, res) => {
         const user = await db.user.findUnique({ where: { userId } });
 
         if (!user) {
-            return res.status(401).json({ message: "Invalid User ID or password" });
+            return res.status(401).json({ message: "Invalid User ID" });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
